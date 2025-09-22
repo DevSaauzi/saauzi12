@@ -17,8 +17,8 @@ class ContactClickAdmin(admin.ModelAdmin):
     list_filter = ['contact_type', 'clicked_at']
     search_fields = ['business__name']
     autocomplete_fields = ['business']
-    date_hierarchy = 'clicked_at'
-    ordering = ['-clicked_at']
+
+
 
 
 @admin.register(WeeklyRanking)
@@ -33,10 +33,9 @@ class WeeklyRankingAdmin(admin.ModelAdmin):
 
 @admin.register(MonthlyRanking)
 class MonthlyRankingAdmin(admin.ModelAdmin):
-    list_display = ['business', 'year', 'month_start', 'view_count', 'click_count', 'ranking']
+    list_display = ['business', 'year', 'month', 'view_count', 'click_count', 'ranking']
     list_filter = ['business', 'ranking', 'year']
     search_fields = ['business__name']
     autocomplete_fields = ['business']
-    date_hierarchy = 'year'
-    ordering = ['-year', '-month_start', 'ranking']
+
 
