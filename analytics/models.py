@@ -6,18 +6,9 @@ from userprofile.models import User
 # Business View
 
 class BusinessView(models.Model):
-    business = models.ForeignKey(
-        BusinessListing,
-        on_delete=models.CASCADE,
-        related_name="views"
-    )
+    business = models.ForeignKey( BusinessListing,on_delete=models.CASCADE,related_name="views")
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+    user = models.ForeignKey( User, on_delete=models.CASCADE, null=True, blank=True)
     user_agent = models.TextField(blank=True)
     viewed_at = models.DateTimeField(auto_now_add=True)
 
@@ -39,17 +30,8 @@ class ContactClick(models.Model):
         ('directions', 'Directions'),
     ]
 
-    business = models.ForeignKey(
-        BusinessListing,
-        on_delete=models.CASCADE,
-        related_name='contact_clicks'
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
+    business = models.ForeignKey(BusinessListing,on_delete=models.CASCADE,related_name='contact_clicks' )
+    user = models.ForeignKey(User,on_delete=models.CASCADE,null=True,blank=True)
     contact_type = models.CharField(max_length=15, choices=CONTACT_TYPE_CHOICES)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     clicked_at = models.DateTimeField(auto_now_add=True)
@@ -64,11 +46,7 @@ class ContactClick(models.Model):
 # Weekly Ranking
 
 class WeeklyRanking(models.Model):
-    business = models.ForeignKey(
-        BusinessListing,
-        on_delete=models.CASCADE,
-        related_name="weekly_rankings"
-    )
+    business = models.ForeignKey( BusinessListing,on_delete=models.CASCADE, related_name="weekly_rankings" )
     week_start = models.DateField()
     view_count = models.PositiveIntegerField(default=0)
     click_count = models.PositiveIntegerField(default=0)
