@@ -2,6 +2,7 @@
 from django.db import models
 from userprofile.models import User
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
 
 
 class Category(models.Model):
@@ -55,40 +56,24 @@ class BusinessListing(models.Model):
         ('rejected', 'Rejected'),
     ]
 
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="businesses",
-        help_text="User who owns this business listing",null=True
-    )
+    owner = models.ForeignKey(User,on_delete=models.CASCADE,related_name="businesses",
+        help_text="User who owns this business listing",null=True)
     name = models.CharField(max_length=200, help_text="Official business name")
     slug = models.SlugField(max_length=255, unique=True, blank=True, help_text="URL-friendly version of name")
 
-    category = models.ForeignKey(
-        'Category',
-        on_delete=models.PROTECT,
-        related_name="listings",
-        help_text="Main category (e.g., Restaurant, Salon)",null=True,default=True
-    )
-    subcategory = models.ForeignKey(
-        'SubCategory',
-        on_delete=models.PROTECT,
-        related_name="listings",
-        blank=True,
-        null=True,
-        help_text="Specific subcategory (e.g., Italian Restaurant, Hair Salon)"
-    )
+    category = models.ForeignKey('Category',on_delete=models.PROTECT,related_name="listings",
+        help_text="Main category (e.g., Restaurant, Salon)",null=True,blank=True)
+    subcategory = models.ForeignKey('SubCategory',on_delete=models.PROTECT,related_name="listings",
+        blank=True,null=True,help_text="Specific subcategory (e.g., Italian Restaurant, Hair Salon)")
 
     phone = models.CharField(max_length=15, blank=True, help_text="Primary contact number")
     email = models.EmailField(max_length=254, blank=True, help_text="Business contact email")
     website = models.URLField(blank=True, help_text="Official website URL")
-    social_links = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text='JSON object of social media URLs, e.g., {"facebook": "https://...", "instagram": "..."}'
-    )
+    social_links = models.JSONField(default=dict,blank=True,
+        help_text='JSON object of social media URLs, e.g., {"facebook": "https://...", "instagram": "..."}')
 
-    logo = models.ImageField(upload_to='business_logos/', blank=True, null=True, help_text="Square logo (200x200px)")
+    logo = models.ImageField(upload_to='business_logos/',
+          validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])],                    blank=True, null=True, help_text="Square logo (200x200px)")
     cover_image = models.ImageField(upload_to='business_covers/', blank=True, null=True, help_text="Banner image (1200x400px)")
     description = models.TextField(blank=True, help_text="Detailed description of business, services, history, etc.")
 
@@ -97,14 +82,8 @@ class BusinessListing(models.Model):
     is_featured = models.BooleanField(default=False, help_text="Is this a paid/promoted listing?")
     verified_badge = models.BooleanField(default=False, help_text="Blue checkmark — verified by admin")
     has_multiple_locations = models.BooleanField(default=False, help_text="Does this business operate from multiple branches?")
-    primary_location = models.ForeignKey(
-        'BusinessLocation',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='primary_for',
-        help_text="Main/default location for display purposes"
-    )
+    primary_location = models.ForeignKey('BusinessLocation',on_delete=models.SET_NULL,
+        null=True,blank=True,related_name='primary_for',help_text="Main/default location for display purposes")
 
     meta_title = models.CharField(max_length=255, blank=True, null=True, help_text="Custom title for search engines")
     meta_description = models.TextField(blank=True, null=True, help_text="Custom meta description for search engines")
@@ -139,7 +118,7 @@ class BusinessListing(models.Model):
 
 class BusinessLocation(models.Model):
     business = models.ForeignKey(BusinessListing, 
-      on_delete=models.CASCADE, related_name="locations")
+    on_delete=models.CASCADE, related_name="locations")
     province = models.CharField(max_length=100)
     district = models.CharField(max_length=100)
     municipality = models.CharField(max_length=100)
@@ -147,8 +126,8 @@ class BusinessLocation(models.Model):
     street = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=254, blank=True, null=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    latitude = models.CharField(max_length=9, null=True, blank=True)
+    longitude = models.CharField(max_length=9, null=True, blank=True)
     opening_time = models.TimeField(blank=True, null=True)
     closing_time = models.TimeField(blank=True, null=True)
 
