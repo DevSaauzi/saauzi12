@@ -19,37 +19,14 @@ class Review(models.Model):
         limit_choices_to={'user_type__in': ['normal', 'owner']},
         help_text="Review written by the user"
     )
-    rating = models.PositiveSmallIntegerField(
+    rating = models.DecimalField(max_digits=3,decimal_places=2,
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         help_text="Overall rating from 1 to 5"
     )
-    rating_quality = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=True,
-        blank=True,
-        help_text="Rating for quality (1-5)"
-    )
-    rating_price = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=True,
-        blank=True,
-        help_text="Rating for price (1-5)"
-    )
-    rating_service = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=True,
-        blank=True,
-        help_text="Rating for service (1-5)"
-    )
-    rating_cleanliness = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        null=True,
-        blank=True,
-        help_text="Rating for cleanliness (1-5)"
-    )
+
     comment = models.TextField(blank=True)
     is_verified = models.BooleanField(default=False, help_text="True if user actually used the service")
-    media = models.JSONField(default=list, blank=True, help_text="List of image/video URLs")
+    media = models.FileField(upload_to='reviews/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -101,34 +78,16 @@ class ReportedReview(models.Model):
         ('resolved', 'Resolved'),
     ]
 
-    reviewed = models.ForeignKey(
-        Review,
-        on_delete=models.CASCADE,
-        related_name="reports",
-        help_text="The review being reported"
-    )
-    reported_by = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="review_reports",
-        help_text="User who reported the review"
-    )
+    reviewed = models.ForeignKey(Review,on_delete=models.CASCADE,related_name="reports",
+        help_text="The review being reported")
+    reported_by = models.ForeignKey(User,on_delete=models.CASCADE,related_name="review_reports",
+        help_text="User who reported the review")
     reason = models.TextField(blank=True, help_text="Reason for the report")
-    status = models.CharField(
-        max_length=10,
-        choices=STATUS_CHOICES,
-        default='pending',
-        help_text="Admin review status"
-    )
-    resolved_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        limit_choices_to={'user_type': 'admin'},
-        related_name="resolved_reports",
-        help_text="Admin who resolved this report"
-    )
+    status = models.CharField(max_length=10,choices=STATUS_CHOICES,default='pending',
+                              help_text="Admin review status")
+    resolved_by = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,
+        limit_choices_to={'user_type': 'admin'},related_name="resolved_reports",
+        help_text="Admin who resolved this report")
     resolved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -151,18 +110,10 @@ class ReportedReview(models.Model):
 
 
 class ReviewReply(models.Model):
-    review = models.OneToOneField(
-        Review,
-        on_delete=models.CASCADE,
-        related_name="reply",
-        help_text="The review being replied to"
-    )
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        limit_choices_to={'user_type': 'owner'},
-        help_text="Must be the business owner"
-    )
+    review = models.OneToOneField(Review,on_delete=models.CASCADE,related_name="reply",
+        help_text="The review being replied to")
+    owner = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'user_type': 'owner'},
+        help_text="Must be the business owner")
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

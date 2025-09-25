@@ -1,3 +1,5 @@
+# listings/views.py
+
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,7 +13,7 @@ from .serializers import (
     BusinessListingSerializer,
     BusinessLocationSerializer,
 )
-from .permissions import IsBusinessOwnerOrReadOnly
+from .permissions import IsBusinessOwnerOrReadOnly, IsAdminOrReadOnly  
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -19,7 +21,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         Prefetch('subcategories', queryset=SubCategory.objects.filter(is_active=True))
     )
     serializer_class = CategorySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]  
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
@@ -27,12 +29,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
 
-
-
 class SubCategoryViewSet(viewsets.ModelViewSet):
-    queryset = SubCategory.objects.none()
+    queryset = SubCategory.objects.all() 
     serializer_class = SubCategorySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]  
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name', 'category__name']
@@ -47,10 +47,8 @@ class SubCategoryViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-
-
 class BusinessListingViewSet(viewsets.ModelViewSet):
-    queryset = BusinessListing.objects.none()  
+    queryset = BusinessListing.objects.none() 
     serializer_class = BusinessListingSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsBusinessOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -73,20 +71,44 @@ class BusinessListingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def toggle_featured(self, request, pk=None):
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        businesses = self.get_queryset().filter(owner=request.user)
+        serializer = self.get_serializer(businesses, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def approve(self, request, pk=None):
         business = self.get_object()
-        user = request.user
+        business.status = 'approved'
+        business.rejection_reason = ''
+        business.save(update_fields=['status', 'rejection_reason'])
+        return Response({'status': 'approved'})
 
-        if not (user.is_staff or business.owner == user):
-            return Response(
-                {"detail": "You do not have permission to perform this action."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        business = self.get_object()
+        reason = request.data.get('reason', '').strip()
+        if not reason:
+            return Response({'reason': 'This field is required.'}, status=400)
+        business.status = 'rejected'
+        business.rejection_reason = reason
+        business.save(update_fields=['status', 'rejection_reason'])
+        return Response({'status': 'rejected', 'reason': reason})
 
-        business.is_featured = not business.is_featured
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def feature(self, request, pk=None):
+        business = self.get_object()
+        business.is_featured = True
         business.save(update_fields=['is_featured'])
-        return Response({'is_featured': business.is_featured})
+        return Response({'is_featured': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def unfeature(self, request, pk=None):
+        business = self.get_object()
+        business.is_featured = False
+        business.save(update_fields=['is_featured'])
+        return Response({'is_featured': False})
 
     @action(detail=True, methods=['get'], url_path='locations')
     def list_locations(self, request, pk=None):
@@ -94,12 +116,17 @@ class BusinessListingViewSet(viewsets.ModelViewSet):
         serializer = BusinessLocationSerializer(business.locations.all(), many=True)
         return Response(serializer.data)
 
-
-
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "Only administrators can delete business listings."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 class BusinessLocationViewSet(viewsets.ModelViewSet):
-    queryset = BusinessLocation.objects.none()  
+    queryset = BusinessLocation.objects.all() 
     serializer_class = BusinessLocationSerializer
     permission_classes = [permissions.IsAuthenticated, IsBusinessOwnerOrReadOnly]
 

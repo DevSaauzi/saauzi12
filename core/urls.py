@@ -38,6 +38,7 @@ urlpatterns = [
     path('', include('userprofile.api.urls')),
     path('listings/',include('listings.api.urls')),
     path('businessreview/',include('businessreview.api.urls')),
+    path('analytics/',include('analytics.api.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 

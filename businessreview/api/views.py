@@ -1,48 +1,41 @@
-
-from rest_framework import viewsets, status, serializers  
+from rest_framework import viewsets, status, permissions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
 from businessreview.models import Review, ReportedReview, ReviewReply
-from .serializers import (
-    ReviewSerializer,
-    ReportedReviewSerializer,
-    ReviewReplySerializer
-)
+from listings.models import BusinessListing
+from .serializers import ReviewSerializer, ReportedReviewSerializer, ReviewReplySerializer
 from .permissions import (
     IsNotBusinessOwner,
-    IsReviewAuthor,
     IsBusinessOwner,
     IsAuthorOfReview,
     IsOwnerOfReviewReply
 )
-from listings.models import BusinessListing
-
-
-
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.select_related('author', 'business').prefetch_related('reports', 'reply')
-    permission_classes = [IsAuthenticated]
     serializer_class = ReviewSerializer
 
     def get_permissions(self):
-        if self.action == 'create':
-            return [IsAuthenticated(), IsNotBusinessOwner()]
-        elif self.action in ['update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsAuthorOfReview()]
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        elif self.action == 'retrieve':
+            return [permissions.AllowAny()]
+        elif self.action == 'create':
+            return [permissions.IsAuthenticated(), IsNotBusinessOwner()]
+        elif self.action in ['update', 'partial_update']:
+            return [permissions.IsAuthenticated(), IsAuthorOfReview()]
+        elif self.action == 'destroy':
+            return [permissions.IsAdminUser()]
         elif self.action == 'report':
-            return [IsAuthenticated(), IsReviewAuthor()]
+            return [permissions.IsAuthenticated()]
         elif self.action == 'reply':
-            return [IsAuthenticated(), IsBusinessOwner()]
-        return [IsAuthenticated()]
-
+            return [permissions.IsAuthenticated(), IsBusinessOwner()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         business_slug = self.kwargs.get('business_slug')
@@ -84,15 +77,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class ReportedReviewViewSet(viewsets.ModelViewSet):
     queryset = ReportedReview.objects.select_related(
         'reviewed__business', 'reported_by', 'resolved_by'
     ).prefetch_related('reviewed__author')
     serializer_class = ReportedReviewSerializer
-    permission_classes = [IsAdminUser]
-    http_method_names = ['get', 'put', 'patch']  
+    permission_classes = [permissions.IsAdminUser]
 
     def perform_update(self, serializer):
         if 'status' in serializer.validated_data:
@@ -104,12 +94,9 @@ class ReportedReviewViewSet(viewsets.ModelViewSet):
             serializer.save()
 
 
-
-
-
 class ReviewReplyViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewReplySerializer
-    permission_classes = [IsAuthenticated, IsOwnerOfReviewReply]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOfReviewReply]
 
     def get_queryset(self):
         return ReviewReply.objects.select_related('review__business', 'owner').filter(owner=self.request.user)
