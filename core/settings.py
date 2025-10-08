@@ -57,6 +57,7 @@ PROJECT_APPS = [
  "analytics",
  "notifications",
  "ads",
+ "verification",
 
 ]
 
@@ -64,6 +65,10 @@ INSTALLED_APPS += THIRD_PARTY_APPS + PROJECT_APPS
 
 
 AUTH_USER_MODEL = 'userprofile.User' 
+
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+
 
 
 

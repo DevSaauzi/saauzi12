@@ -32,11 +32,11 @@ class AdClickAdmin(admin.ModelAdmin):
 
 @admin.register(Cupon) 
 class CuponAdmin(admin.ModelAdmin):
-    list_display = ['code', 'discount_type', 'discount_value', 'valid_form', 'valid_until', 'is_active', 'used_count', 'status']
-    list_filter = ['discount_type', 'is_active', 'status', 'valid_form', 'valid_until']
+    list_display = ['code', 'discount_type', 'discount_value', 'valid_from', 'valid_until', 'is_active', 'used_count', 'status']
+    list_filter = ['discount_type', 'is_active', 'status', 'valid_from', 'valid_until']
     search_fields = ['code', 'business__name']
     readonly_fields = ['created_at', 'used_count', 'updated_at']
-    date_hierarchy = 'valid_form'
+    date_hierarchy = 'valid_from'
     ordering = ['-created_at']
 
 

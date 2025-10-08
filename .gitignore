@@ -1,0 +1,68 @@
+# Django stuff:
+*.pyc
+*.pyo
+__pycache__/
+local_settings.py
+
+# Database files:
+db.sqlite3
+db.sqlite3-journal
+
+# OS generated files
+.DS_Store
+.AppleDesktopService.ID
+.thumbs.db
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+media/
+
+# Build and dist stuff
+build/
+dist/
+*.egg-info
+*.mp3
+*.m4a
+*.m4p
+*.m4v
+*.ogg
+*.wav
+*.log
+*.pot
+*.mo
+*.mo~
+
+# Python package builds
+*.whl
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Virtualenvs
+.venv
+.tox
+.env
+venv/
+
+# Pytest
+.cache
+.coverage
+.tox
+.no_cache
+*.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothes
+.pytest_cache
+
+# Jupyter notebook
+.ipynb_checkpoints
+
+# Node.js stuff
+node_modules/
+
+# Yarn stuff
+yarn-debug.log*
+yarn-error.log*
+pnplogs/

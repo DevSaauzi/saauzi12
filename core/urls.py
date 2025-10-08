@@ -40,7 +40,8 @@ urlpatterns = [
     path('businessreview/',include('businessreview.api.urls')),
     path('analytics/',include('analytics.api.urls')),
     path('ads/',include('ads.api.urls')),
-     path('notifications/',include('notifications.api.urls')),
+    path('notifications/',include('notifications.api.urls')),
+    path('verification/',include('verification.api.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 

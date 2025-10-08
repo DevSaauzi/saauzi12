@@ -78,7 +78,7 @@ class Cupon(models.Model):
         choices=[('percentage', 'Percentage'), ('fixed', 'Fixed Amount')],default='percentage')
         discount_value = models.DecimalField(max_digits=10,decimal_places=2,validators=[MinValueValidator(0)],
             help_text="e.g., 10 for 10% off or Rs.10 off")   
-        valid_form = models.DateTimeField()
+        valid_from = models.DateTimeField()
         valid_until = models.DateTimeField()
         usage_limit = models.PositiveIntegerField(default=0,help_text="unlimited")
         used_count = models.PositiveBigIntegerField(default=0)
